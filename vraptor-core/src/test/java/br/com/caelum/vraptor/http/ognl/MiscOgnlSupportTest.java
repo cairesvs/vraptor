@@ -45,6 +45,8 @@ import br.com.caelum.vraptor.core.Converters;
 import br.com.caelum.vraptor.core.JstlLocalization;
 import br.com.caelum.vraptor.core.RequestInfo;
 import br.com.caelum.vraptor.http.MutableRequest;
+import br.com.caelum.vraptor.proxy.CglibProxifier;
+import br.com.caelum.vraptor.proxy.ReflectionInstanceCreator;
 
 /**
  * Unfortunately OGNL sucks so bad in its design that we had to create a "unit"
@@ -76,6 +78,8 @@ public class MiscOgnlSupportTest {
         Ognl.setTypeConverter(context, new VRaptorConvertersAdapter(converters, bundle));
         when(converters.to(String.class)).thenReturn((Converter) new StringConverter());
 		when(converters.to(Long.class)).thenReturn((Converter) new LongConverter());
+		
+		context.put("proxifier", new CglibProxifier(new ReflectionInstanceCreator()));
     }
 
 
