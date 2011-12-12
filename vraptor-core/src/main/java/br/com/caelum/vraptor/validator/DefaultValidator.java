@@ -20,7 +20,9 @@ package br.com.caelum.vraptor.validator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +84,8 @@ public class DefaultValidator extends AbstractValidator {
     	if (!hasErrors()) {
     		return new MockResult(proxifier).use(view); //ignore anything, no errors occurred
     	}
+    	
+    	result.include("messageFor", getMessage());
     	result.include("errors", errors);
     	outjector.outjectRequestMap();
     	return viewsFactory.instanceFor(view, errors);
@@ -107,4 +111,17 @@ public class DefaultValidator extends AbstractValidator {
 	public List<Message> getErrors() {
 		return Collections.unmodifiableList(this.errors);
 	}
+	
+	private Map<String, String> errorsToMap(){
+		Map<String,String> map = new HashMap<String, String>();
+		for (Message message : this.errors) {
+			map.put(message.getCategory(), message.getMessage());
+		}
+		return map;
+	}
+	
+	public Map<String, String> getMessage() {
+		return errorsToMap();
+	}
+	
 }

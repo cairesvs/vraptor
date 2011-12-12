@@ -20,6 +20,7 @@ package br.com.caelum.vraptor.validator;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -30,6 +31,8 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.junit.Assert;
@@ -148,6 +151,30 @@ public class DefaultValidatorTest {
 		validator.add(message);
 
 		verify(message, never()).setBundle(any(ResourceBundle.class));
+	}
+	
+	@Test
+	public void shouldAddMessageToAHelperMap() throws Exception {
+		Proxifier proxifier = new DefaultProxifier();
+		MockResult result = new MockResult();
+		DefaultValidator validator = new DefaultValidator(result, 
+				new DefaultValidationViewsFactory(result, proxifier), outjector, proxifier, null, localization);	
+		
+		validator.add(new ValidationMessage("Invalid login", "user.login"));
+		validator.add(new ValidationMessage("Wrong password, dude", "user.password"));
+		validator.add(new ValidationMessage("email should contain @", "user.email"));
+		
+		try {
+			validator.onErrorUse(Results.page()).of(MyComponent.class).logic();
+			fail();
+		}catch (ValidationException e) {
+			Map<String, Object> map = result.included();
+			Map<String,String> message = (Map<String, String>) map.get("messageFor");
+			
+			assertEquals("Invalid login", message.get("user.login"));
+			assertEquals("Wrong password, dude", message.get("user.password"));
+			assertEquals("email should contain @", message.get("user.email"));
+		}
 	}
 
 	@Resource
