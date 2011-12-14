@@ -33,6 +33,6 @@ public interface BeanValidator {
      * @param object The object to be validated.
      * @return List of constraint violations.
      */
-    List<Message> validate(Object object);
+    List<Message> validate(Object object, Class<?>...classes);
 
 }

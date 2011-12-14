@@ -59,13 +59,13 @@ public class JSR303Validator
 		this.interpolator = interpolator;
     }
 
-    public List<Message> validate(Object bean) {
+    public List<Message> validate(Object bean, Class<?>... classes) {
         if (bean == null) {
             logger.warn("skiping validation, input bean is null.");
             return Collections.emptyList(); // skip if the bean is null
         }
-
-        final Set<ConstraintViolation<Object>> violations = validator.validate(bean);
+        final Set<ConstraintViolation<Object>> violations = getViolations(bean,
+				classes);
         logger.debug("there are {} violations at bean {}.", violations.size(), bean);
 
         Locale locale = localization.getLocale() == null ? Locale.getDefault() : localization.getLocale();
@@ -82,6 +82,17 @@ public class JSR303Validator
 
         return messages;
     }
+
+	private Set<ConstraintViolation<Object>> getViolations(Object bean,
+			Class<?>... classes) {
+		final Set<ConstraintViolation<Object>> violations; 
+        if(classes != null) {
+        	violations = validator.validate(bean, classes);
+        }else {
+        	violations = validator.validate(bean);
+        }
+		return violations;
+	}
 
     /**
      * Create a personalized implementation for {@link javax.validation.MessageInterpolator.Context}. This class is need

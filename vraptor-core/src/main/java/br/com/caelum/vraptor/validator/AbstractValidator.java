@@ -18,9 +18,6 @@ package br.com.caelum.vraptor.validator;
 import static br.com.caelum.vraptor.view.Results.logic;
 import static br.com.caelum.vraptor.view.Results.page;
 import static br.com.caelum.vraptor.view.Results.status;
-
-import java.util.List;
-
 import br.com.caelum.vraptor.Validator;
 
 /**

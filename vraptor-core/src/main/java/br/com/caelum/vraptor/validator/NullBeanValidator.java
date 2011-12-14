@@ -30,7 +30,7 @@ public class NullBeanValidator implements BeanValidator {
 
 	private static final Logger logger = LoggerFactory.getLogger(NullBeanValidator.class);
 
-	public List<Message> validate(Object object) {
+	public List<Message> validate(Object object, Class<?>...classes) {
 		logger.warn("You are willing to validate an object, but there is no bean validation engine " +
 				"registered. Please add the jars of some implementation of JSR 303 or Hibernate Validator.");
 		return Collections.emptyList();

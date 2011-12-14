@@ -71,15 +71,24 @@ public class DefaultValidator extends AbstractValidator {
     }
 
     public void validate(Object object) {
-        if (beanValidators == null || beanValidators.isEmpty()) {
-            logger.warn("has no validators registered");
-        } else {
-            for (BeanValidator validator : beanValidators) {
-                addAll(validator.validate(object));
-            }
-        }
+        addAllBeanValidations(object, null);
     }
 
+    
+    public void validate(Object object, Class<?>... classes) {
+        addAllBeanValidations(object, classes);
+    }
+
+    private void addAllBeanValidations(Object object, Class<?>[] classes) {
+    	if (beanValidators == null || beanValidators.isEmpty()) {
+    		logger.warn("has no validators registered");
+    	} else {
+    		for (BeanValidator validator : beanValidators) {
+    			addAll(validator.validate(object, classes));
+    		}
+    	}
+    }
+    
     public <T extends View> T onErrorUse(Class<T> view) {
     	if (!hasErrors()) {
     		return new MockResult(proxifier).use(view); //ignore anything, no errors occurred

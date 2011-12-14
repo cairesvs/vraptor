@@ -44,7 +44,7 @@ public class HibernateValidator3
 	}
 
     @SuppressWarnings("unchecked")
-    public List<Message> validate(Object object) {
+    public List<Message> validate(Object object, Class<?>... classes) {
         List<Message> errors = new ArrayList<Message>();
         ClassValidator<Object> validator = (ClassValidator<Object>) locator.getValidator(object.getClass(), localization.getBundle());
         InvalidValue[] invalidValues = validator.getInvalidValues(object);

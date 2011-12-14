@@ -20,7 +20,8 @@ package br.com.caelum.vraptor.validator;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -31,7 +32,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -154,6 +154,7 @@ public class DefaultValidatorTest {
 	}
 	
 	@Test
+	@SuppressWarnings("unchecked")
 	public void shouldAddMessageToAHelperMap() throws Exception {
 		Proxifier proxifier = new DefaultProxifier();
 		MockResult result = new MockResult();
@@ -176,10 +177,9 @@ public class DefaultValidatorTest {
 			assertEquals("email should contain @", message.get("user.email"));
 		}
 	}
-
+	
 	@Resource
 	public static interface MyComponent {
 		public void logic();
 	}
-
 }

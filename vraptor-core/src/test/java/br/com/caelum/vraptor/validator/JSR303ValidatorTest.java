@@ -1,6 +1,16 @@
 package br.com.caelum.vraptor.validator;
 
-import org.junit.Assert;
+import static br.com.caelum.vraptor.util.Matchers.containValidationMessageFrom;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -39,15 +49,45 @@ public class JSR303ValidatorTest {
     @Test
     public void withoutViolations() {
         CustomerJSR303 customer0 = new CustomerJSR303(10, "Vraptor");
-        Assert.assertTrue(jsr303Validator.validate(customer0).isEmpty());
+        assertTrue(jsr303Validator.validate(customer0).isEmpty());
     }
 
     @Test
     public void withViolations() {
         CustomerJSR303 customer0 = new CustomerJSR303(null, null);
-        Assert.assertFalse(jsr303Validator.validate(customer0).isEmpty());
+        assertFalse(jsr303Validator.validate(customer0).isEmpty());
     }
-
+    
+    @Test
+    public void withSpecificGroup() {
+    	Bean bean = new Bean();
+    	List<Message> errors = jsr303Validator.validate(bean, Group.class);
+    	assertEquals(1, errors.size());
+		assertFalse(errors.isEmpty());
+		assertThat(errors, containValidationMessageFrom("Name should be not null"));
+    }
+    
+    @Test
+    public void usingTwoDifferentsGroups() {
+    	Bean bean = new Bean();
+    	List<Message> errors = jsr303Validator.validate(bean, Group.class, OtherGroup.class);
+    	assertEquals(2, errors.size());
+		assertFalse(errors.isEmpty());
+		assertThat(errors, containValidationMessageFrom("E-mail should contain @"));
+		assertThat(errors, containValidationMessageFrom("Name should be not null"));
+    }    
+    
+    @Test
+    public void usingTwoDifferentsGroupsButOnlyOneIsInvalid() {
+    	Bean bean = new Bean();
+    	bean.setName("Caires");
+    	List<Message> errors = jsr303Validator.validate(bean, Group.class, OtherGroup.class);
+    	assertEquals(1, errors.size());
+		assertFalse(errors.isEmpty());
+		assertThat(errors, containValidationMessageFrom("E-mail should contain @"));
+		assertThat(errors, not(containValidationMessageFrom("Name should be not null")));
+    }
+    
     /**
      * Customer for using in bean validator tests.
      */
@@ -64,4 +104,30 @@ public class JSR303ValidatorTest {
             this.name = name;
         }
     }
+    
+    class Bean{
+		@NotNull(groups=Group.class, message="Name should be not null")
+		private String name = null;
+		
+		@NotNull(groups=OtherGroup.class, message="E-mail should contain @")
+		private String email;
+		
+		private String address;
+		
+		public void setAddress(String address) {
+			this.address = address;
+		}
+		
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+		public void setEmail(String email) {
+			this.email = email;
+		}
+	}
+	
+	interface Group{}
+	
+	interface OtherGroup{}
 }
