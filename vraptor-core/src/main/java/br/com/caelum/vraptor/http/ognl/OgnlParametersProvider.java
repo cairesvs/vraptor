@@ -27,8 +27,9 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Map.Entry;
+import java.util.ResourceBundle;
+import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -113,11 +114,10 @@ public class OgnlParametersProvider implements ParametersProvider {
 	private Object createParameter(Parameter param, Map<String, String[]> requestNames, ResourceBundle bundle, List<Message> errors) {
 		Object root;
 		if (request.getAttribute(param.name) != null) {
-			root = request.getAttribute(param.name);
-		} else if (requestNames.isEmpty()) {
-			if (container.canProvide(param.clazz)) {
-				return container.instanceFor(param.clazz);
-			}
+			return request.getAttribute(param.name);
+		} else if (param.clazz.isInterface() && container.canProvide(param.clazz)) {
+            return container.instanceFor(param.clazz);
+        } else if (requestNames.isEmpty()) {
 			return Defaults.defaultValue(param.actualType());
 		} else {
 			root = createRoot(param, requestNames, bundle, errors);
@@ -203,6 +203,6 @@ public class OgnlParametersProvider implements ParametersProvider {
 
 	private Map<String, String[]> parametersThatStartWith(String name) {
 		Map<String, String[]> requestNames = filterKeys(request.getParameterMap(), containsPattern("^" + name));
-		return requestNames;
+		return new TreeMap<String, String[]>(requestNames);
 	}
 }

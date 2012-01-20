@@ -110,7 +110,6 @@ public class IogiParametersProviderTest extends ParametersProviderTest {
 		final ResourceMethod buyAHouse = buyA;
 		requestParameterIs(buyAHouse, "house", "");
 
-		@SuppressWarnings("unchecked")
 		final InstantiatorWithErrors mockInstantiator = mock(InstantiatorWithErrors.class);
 		IogiParametersProvider iogiProvider = new IogiParametersProvider(nameProvider, request, mockInstantiator);
 		final Target<House> expectedTarget = Target.create(House.class, "house");
@@ -127,7 +126,7 @@ public class IogiParametersProviderTest extends ParametersProviderTest {
 
 		getParameters(setId);
 
-		assertThat(errors, hasSize(1));
+		assertThat(errors.size(), is(1));
 	}
 
 	@Test

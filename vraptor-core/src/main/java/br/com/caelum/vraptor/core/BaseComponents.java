@@ -120,8 +120,12 @@ import br.com.caelum.vraptor.ioc.ConverterHandler;
 import br.com.caelum.vraptor.ioc.InterceptorStereotypeHandler;
 import br.com.caelum.vraptor.ioc.ResourceHandler;
 import br.com.caelum.vraptor.ioc.StereotypeHandler;
-import br.com.caelum.vraptor.proxy.ObjenesisProxifier;
+import br.com.caelum.vraptor.proxy.CglibProxifier;
+import br.com.caelum.vraptor.proxy.InstanceCreator;
+import br.com.caelum.vraptor.proxy.JavassistProxifier;
+import br.com.caelum.vraptor.proxy.ObjenesisInstanceCreator;
 import br.com.caelum.vraptor.proxy.Proxifier;
+import br.com.caelum.vraptor.proxy.ReflectionInstanceCreator;
 import br.com.caelum.vraptor.resource.DefaultMethodNotAllowedHandler;
 import br.com.caelum.vraptor.resource.DefaultResourceNotFoundHandler;
 import br.com.caelum.vraptor.resource.MethodNotAllowedHandler;
@@ -139,6 +143,9 @@ import br.com.caelum.vraptor.serialization.NullProxyInitializer;
 import br.com.caelum.vraptor.serialization.ProxyInitializer;
 import br.com.caelum.vraptor.serialization.RepresentationResult;
 import br.com.caelum.vraptor.serialization.XMLSerialization;
+import br.com.caelum.vraptor.serialization.xstream.XStreamBuilder;
+import br.com.caelum.vraptor.serialization.xstream.XStreamBuilderImpl;
+import br.com.caelum.vraptor.serialization.xstream.XStreamConverters;
 import br.com.caelum.vraptor.serialization.xstream.XStreamJSONPSerialization;
 import br.com.caelum.vraptor.serialization.xstream.XStreamJSONSerialization;
 import br.com.caelum.vraptor.serialization.xstream.XStreamXMLSerialization;
@@ -147,6 +154,7 @@ import br.com.caelum.vraptor.validator.DefaultValidator;
 import br.com.caelum.vraptor.validator.HibernateValidator3;
 import br.com.caelum.vraptor.validator.JSR303Validator;
 import br.com.caelum.vraptor.validator.JSR303ValidatorFactory;
+import br.com.caelum.vraptor.validator.MessageConverter;
 import br.com.caelum.vraptor.validator.MessageInterpolatorFactory;
 import br.com.caelum.vraptor.validator.NullBeanValidator;
 import br.com.caelum.vraptor.validator.Outjector;
@@ -171,6 +179,8 @@ import br.com.caelum.vraptor.view.RefererResult;
 import br.com.caelum.vraptor.view.SessionFlashScope;
 import br.com.caelum.vraptor.view.Status;
 import br.com.caelum.vraptor.view.ValidationViewsFactory;
+
+import com.thoughtworks.xstream.converters.SingleValueConverter;
 
 /**
  * List of base components to vraptor.<br/>
@@ -197,14 +207,15 @@ public class BaseComponents {
             MethodNotAllowedHandler.class,	DefaultMethodNotAllowedHandler.class,
             RoutesConfiguration.class, 		NoRoutesConfiguration.class,
             Deserializers.class,			DefaultDeserializers.class,
-            Proxifier.class, 				ObjenesisProxifier.class,
+            Proxifier.class, 				getProxifier(),
+            InstanceCreator.class,          getInstanceCreator(),
             ParameterNameProvider.class, 	ParanamerNameProvider.class,
             TypeFinder.class, 				DefaultTypeFinder.class,
-            XMLDeserializer.class,			XStreamXMLDeserializer.class,
             RoutesParser.class, 			PathAnnotationRoutesParser.class,
             Routes.class,					DefaultRoutes.class,
             RestDefaults.class,				DefaultRestDefaults.class,
             Evaluator.class,				JavaEvaluator.class,
+            SingleValueConverter.class,     XStreamConverters.NullConverter.class,
             ProxyInitializer.class,			getProxyInitializerImpl()
     );
 
@@ -213,7 +224,8 @@ public class BaseComponents {
 
     private static final Map<Class<?>, Class<?>> PROTOTYPE_COMPONENTS = classMap(
     		InterceptorStack.class, 						DefaultInterceptorStack.class,
-    		RequestExecution.class, 						EnhancedRequestExecution.class
+    		RequestExecution.class, 						EnhancedRequestExecution.class,
+    		XStreamBuilder.class, 							XStreamBuilderImpl.class
     );
 
     private static final Map<Class<?>, Class<?>> REQUEST_COMPONENTS = classMap(
@@ -244,6 +256,7 @@ public class BaseComponents {
             ParametersInstantiatorInterceptor.class, 		ParametersInstantiatorInterceptor.class,
             ResourceLookupInterceptor.class, 				ResourceLookupInterceptor.class,
             Status.class,									DefaultStatus.class,
+            XMLDeserializer.class,			                XStreamXMLDeserializer.class,
             XMLSerialization.class,							XStreamXMLSerialization.class,
             JSONSerialization.class,						XStreamJSONSerialization.class,
             JSONPSerialization.class,						XStreamJSONPSerialization.class,
@@ -253,7 +266,9 @@ public class BaseComponents {
             Configuration.class,							ApplicationConfiguration.class,
             RestHeadersHandler.class,						DefaultRestHeadersHandler.class,
             OgnlFacade.class,								OgnlFacade.class,
-            FlashScope.class,								SessionFlashScope.class
+            FlashScope.class,								SessionFlashScope.class,
+            XStreamConverters.class,                        XStreamConverters.class,
+            MessageConverter.class,							MessageConverter.class
     );
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -315,6 +330,22 @@ public class BaseComponents {
 			return NullProxyInitializer.class;
 		}
 	}
+
+    private static Class<? extends InstanceCreator> getInstanceCreator() {
+        if (isClassPresent("org.objenesis.ObjenesisStd")) {
+            return ObjenesisInstanceCreator.class;
+        }
+
+        return ReflectionInstanceCreator.class;
+    }
+
+    private static Class<? extends Proxifier> getProxifier() {
+        if (isClassPresent("net.sf.cglib.proxy.Factory")) {
+            return CglibProxifier.class;
+        }
+
+        return JavassistProxifier.class;
+    }
 
 	public static Map<Class<?>, Class<?>> getCachedComponents() {
 		return Collections.unmodifiableMap(CACHED_COMPONENTS);

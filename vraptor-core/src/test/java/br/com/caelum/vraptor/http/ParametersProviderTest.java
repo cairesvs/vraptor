@@ -73,7 +73,6 @@ public abstract class ParametersProviderTest {
 
 	protected abstract ParametersProvider getProvider();
 
-    @SuppressWarnings("unchecked")
 	@Before
     public void setup() throws Exception {
     	MockitoAnnotations.initMocks(this);
@@ -310,8 +309,20 @@ public abstract class ParametersProviderTest {
     }
 
     @Test
-    public void doesntReturnDependenciesIfThereAreParameters() throws Exception {
-    	requestParameterIs(abc, "abc.x", "abc");
+    public void ignoresPopulationIfIfRequestCanProvide() throws Exception {
+    	requestParameterIs(abc, "abc.x", "1");
+        ABC expected = new ABC();
+        expected.setX(2l);
+
+        when(request.getAttribute("abc")).thenReturn(expected);
+
+    	ABC returned = getParameters(abc);
+    	assertThat(returned.getX(), is(2l));
+    }
+
+    @Test
+    public void doesntReturnDependenciesIfItIsNotAnInterface() throws Exception {
+    	thereAreNoParameters();
     	ABC result = mock(ABC.class);
     	when(container.canProvide(ABC.class)).thenReturn(true);
     	when(container.instanceFor(ABC.class)).thenReturn(result);

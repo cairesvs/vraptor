@@ -18,24 +18,29 @@
 package br.com.caelum.vraptor.serialization.xstream;
 
 import br.com.caelum.vraptor.interceptor.TypeNameExtractor;
+import br.com.caelum.vraptor.validator.Message;
 
+import com.google.common.base.Supplier;
 import com.thoughtworks.xstream.mapper.Mapper;
 import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 public class VRaptorClassMapper extends MapperWrapper {
 
-	private final TypeNameExtractor extractor;
+	private final Supplier<TypeNameExtractor> extractor;
 
-	public VRaptorClassMapper(Mapper wrapped, TypeNameExtractor extractor) {
+	public VRaptorClassMapper(Mapper wrapped, Supplier<TypeNameExtractor> supplier) {
 		super(wrapped);
-		this.extractor = extractor;
+		this.extractor = supplier;
 	}
 
 	@Override
 	public String serializedClass(Class type) {
+		if (Message.class.isAssignableFrom(type)) {
+			return "message";
+		}
 		String superName = super.serializedClass(type);
 		if (type.getName().equals(superName)) {
-			return extractor.nameFor(type);
+			return extractor.get().nameFor(type);
 		}
 		return superName;
 	}
