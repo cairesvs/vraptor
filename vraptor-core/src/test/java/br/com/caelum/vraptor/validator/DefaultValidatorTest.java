@@ -20,10 +20,13 @@ package br.com.caelum.vraptor.validator;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -31,7 +34,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -45,6 +47,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import br.com.caelum.vraptor.Resource;
 import br.com.caelum.vraptor.Result;
 import br.com.caelum.vraptor.core.Localization;
+import br.com.caelum.vraptor.proxy.CglibProxifier;
 import br.com.caelum.vraptor.proxy.JavassistProxifier;
 import br.com.caelum.vraptor.proxy.ObjenesisInstanceCreator;
 import br.com.caelum.vraptor.proxy.Proxifier;
@@ -138,10 +141,16 @@ public class DefaultValidatorTest {
 	}
 
 	@Test
-	public void shouldSetBundleOnI18nMessages() throws Exception {
-		I18nMessage message = mock(I18nMessage.class);
+	public void shouldSetBundleOnI18nMessagesLazily() throws Exception {
+		I18nMessage message = new I18nMessage("cat", "msg");
+		when(localization.getBundle()).thenThrow(new AssertionError("should only call this method when calling I18nMessage's methods"));
+		
 		validator.add(message);
-		verify(message).setBundle(any(ResourceBundle.class));
+		
+		doReturn(new SingletonResourceBundle("msg", "hoooooray!")).when(localization).getBundle();
+		
+		assertThat(message.getMessage(), is("hoooooray!"));
+		
 	}
 
 	@Test
@@ -156,7 +165,7 @@ public class DefaultValidatorTest {
 	
 	@Test
 	public void shouldAddMessageToAHelperMap() throws Exception {
-		Proxifier proxifier = new DefaultProxifier();
+		Proxifier proxifier = new CglibProxifier(new ObjenesisInstanceCreator());
 		MockResult result = new MockResult();
 		DefaultValidator validator = new DefaultValidator(result, 
 				new DefaultValidationViewsFactory(result, proxifier), outjector, proxifier, null, localization);	

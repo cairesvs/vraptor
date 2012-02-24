@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,8 @@ import br.com.caelum.vraptor.proxy.Proxifier;
 import br.com.caelum.vraptor.util.test.MockResult;
 import br.com.caelum.vraptor.view.ValidationViewsFactory;
 
+import com.google.common.base.Supplier;
+
 /**
  * The default validator implementation.
  *
@@ -43,7 +46,13 @@ import br.com.caelum.vraptor.view.ValidationViewsFactory;
 @RequestScoped
 public class DefaultValidator extends AbstractValidator {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultValidator.class);
+    private final class LocalizationSupplier implements Supplier<ResourceBundle> {
+		public ResourceBundle get() {
+			return localization.getBundle();
+		}
+	}
+
+	private static final Logger logger = LoggerFactory.getLogger(DefaultValidator.class);
 
     private final Result result;
 
@@ -67,7 +76,7 @@ public class DefaultValidator extends AbstractValidator {
     }
 
     public void checking(Validations validations) {
-        addAll(validations.getErrors(localization.getBundle()));
+        addAll(validations.getErrors(new LocalizationSupplier()));
     }
 
     public void validate(Object object) {
@@ -99,7 +108,7 @@ public class DefaultValidator extends AbstractValidator {
 
     public void add(Message message) {
     	if (message instanceof I18nMessage && !((I18nMessage) message).hasBundle()) {
-    		((I18nMessage) message).setBundle(localization.getBundle());
+    		((I18nMessage) message).setLazyBundle(new LocalizationSupplier());
     	}
     	this.errors.add(message);
     }
